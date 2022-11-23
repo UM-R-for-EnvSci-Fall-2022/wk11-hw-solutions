@@ -18,7 +18,7 @@ I have modified the data a bit to make it more suited to the learning objectives
 2.  Apart from the back-end data wrangling and clean-up work needed to get the data to a working state, you will need to perform some exploratory work to answer the question **"In what years was each sampling sites sampled?"** for this i would like you to output a table like the one at the end of this document.
 3.  You will also need to create a summary figure similar to the one below (of course, using your own theme), which would allow us to compare the nutrient loads in the surface water of Lake Winnipeg between 2002 and 2004 as well as between the two basins.
 
-![](figures/figures_to_replicate/figure_1.png)\<!-
+![](figures/figures_to_replicate/figure_1.png)
 
 Just like last week, this is not a replication exercise. This figure was made using a theme I created for this class, feel free to apply your own theme. Do try to keep the main elements related to the data itself.
 
@@ -47,8 +47,8 @@ Finally, once you have completed the exercises, as usual:
 
 As always, feel free to use the [Homework Issues](%5Bhttps://github.com/orgs/UM-R-for-EnvSci-Fall-2022/discussions/categories/homework-issues) section of the [discussion](%5Bhttps://github.com/orgs/UM-R-for-EnvSci-Fall-2022/discussions) section to reach out to your classmates if you have any questions. Remember that this is a way to practice how to engage in something like Stack Overflow or similar. I will be monitoring it, and if you are not getting any help, I'll jump in! Remember you can always tag me or any classmate in a comment for quicker replies!
 
-\*Happy coding!\*
+*Happy coding!*
 
 Pepe
 
-![](figures/figures_to_replicate/site_sumary_table.png)\<!-
+![](figures/figures_to_replicate/site_sumary_table.png)
