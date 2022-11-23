@@ -1,0 +1,176 @@
+---
+title: "Week 11 Homework Assignment"
+author: "Jose Luis Rodriguez Gil"
+date: "22/11/2022"
+output: 
+  html_document:
+    number_sections: true
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=FALSE}
+
+library(tidyverse)
+library(janitor)
+library(here)
+
+library(viridis)
+library(gt)
+
+```
+
+
+```{r source functions, include=FALSE}
+
+source(here("functions", "theme_pepe_full.R"))
+
+theme_set(theme_pepe_full())  #Sets the theme for all ggplot plots in this .Rmd file (no need to call it in the plot itself)
+
+```
+
+# Data loading
+
+First we start by loading up all the data
+
+```{r}
+
+low_sites <- read_csv(here("data", "sites.csv"))
+low_sample_log <- read_csv(here("data", "sample_log.csv"))
+low_results_2002 <- read_csv(here("data", "results_2002.csv"))
+low_results_2004 <- read_csv(here("data", "results_2004.csv"))
+
+```
+
+# Data binding and joining
+
+With all the data loaded, we are going to start binding and joining the different oieces to get to our main, combined,dataset
+
+Let's start by binding the two years of results data into one:
+
+```{r bind results}
+
+low_results <- bind_rows(low_results_2002, low_results_2004)
+
+low_results
+
+```
+
+Now that we have our complete hree pieces (sites, sample_log, and results), we want to join thse toguether. For that we will use the `left_join()` function starting by joining the sample log to the site info (using *monitoring_location_id* as our key column) followed by a left yoing with the results data (using *sample_id* as our key column)
+
+```{r join datasets}
+
+low_data <- low_sample_log %>% 
+  left_join(low_sites, by = "monitoring_location_id") %>% 
+  left_join(low_results, by = "sample_id")
+
+low_data
+
+```
+
+# Data processing
+
+Now that we have one single, combine, dataset, we still need to do some processing. 
+
+- First we will use `pivot_longer()` to change the parameter columns into long form.
+- second we need to deal with the **no detects**. We are going to change them for a zero.
+- Third we will `mutate()` the year variable into a factor to ensure we can create our boxplots.
+- Finally, we will "pretyfy" the names of the parameters so they display betteer in the figure
+
+```{r process data}
+
+low_data_long <- low_data %>% 
+  pivot_longer(cols = c(nitrate,nitrite,
+                        ammonia,
+                        total_nitrogen_mixed_forms,
+                        soluble_reactive_phosphorus_srp,
+                        total_phosphorus_mixed_forms),
+               names_to = "parameter",
+               values_to = "concentration") %>% 
+  mutate(concentration = str_replace(concentration, "<LOD", "0")) %>% 
+  mutate(concentration = as.numeric(concentration)) %>% 
+  mutate(year = factor(year, levels = c("2002", "2004"))) %>% 
+  mutate(parameter = case_when(
+    parameter == "total_nitrogen_mixed_forms" ~ "Total N",
+    parameter == "soluble_reactive_phosphorus_srp" ~ "SRP",
+    parameter == "total_phosphorus_mixed_forms" ~ "Total P",
+    TRUE ~ parameter  # This line tells case_when() that any other case just gets whatever value parameter had already
+  ))
+
+low_data_long
+
+```
+
+# Data exploration
+
+## Were all the sites sampled every year?
+
+We are going to use `distinct()` to create a sumary table of distinct combinations of site and year. We are also going to add basin so we can use this info later on (the presence of basin does not change the results as the sites can only belong to one basin. Then we `count()` with the same parameters to generate a column of ones that we will need for the next step.
+
+In the next step we use `pivot_wider()` to expand the year counts into two columns, one for each year and we ask it to fill the convinations not present in our list (sites not sampled in a particular year) with zeros.
+
+Then we just use `gt()` to create a nicer table
+
+```{r}
+
+site_sumary_table <- low_data_long %>% 
+  distinct(basin, monitoring_location_name, year) %>% 
+  count(basin, monitoring_location_name, year) %>% 
+  pivot_wider(names_from = year, values_from = n, values_fill = 0) %>% 
+  rename(Site = monitoring_location_name) %>% 
+  gt(groupname_col = "basin") %>% 
+  tab_header(
+    title = md("**Sampling locations**"))
+
+site_sumary_table
+
+```
+
+WE can save the table in a similar way to what we did with ggplot figures using `gtsave(()`. This function, however, defaults to saving an `.html` version of the table. from there, it can morph it into other formats (e.g. `.pdf`), but for that we need to have another package called `webshot2` installed. If you do not have it, it will ask for it and once you install it it is all good to go.
+
+```{r}
+gtsave(site_sumary_table, filename = "site_sumary_table.pdf", path = here("figures"))
+```
+
+# Plots
+
+With all the data ready to go, we just need to plot
+
+```{r}
+
+low_plot <- low_data_long %>% 
+  ggplot() +
+  facet_grid(rows = vars(basin), cols = vars(parameter)) +
+  # facet_wrap(~ parameter, nrow = 1) +
+  geom_boxplot(aes(x = year, y = concentration, colour = year), fill = NA) +
+  scale_y_log10() +
+  scale_colour_brewer(palette = "Set1") +
+  theme(legend.position = "none") +
+  labs(x = NULL,
+       y = expression(Concentration~(mu*g~.~L^{-1})),  # with expression() you can plot math. "~" means a space
+       title = "Lake winnipeg nutrients",
+       subtitle = "Water surface nutrient concentrations in the North and South basins for 2002 and 2004")
+
+low_plot
+
+```
+
+Let's save it
+
+```{r}
+
+ggsave(here("figures", "low_plot.pdf"), low_plot, width = 190, height = 120, units = "mm")
+
+
+```
+
+
+
+
+
+
+
+
