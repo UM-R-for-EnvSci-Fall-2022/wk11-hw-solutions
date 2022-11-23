@@ -132,7 +132,7 @@ site_sumary_table
 WE can save the table in a similar way to what we did with ggplot figures using `gtsave(()`. This function, however, defaults to saving an `.html` version of the table. from there, it can morph it into other formats (e.g. `.pdf`), but for that we need to have another package called `webshot2` installed. If you do not have it, it will ask for it and once you install it it is all good to go.
 
 ```{r}
-gtsave(site_sumary_table, filename = "site_sumary_table.pdf", path = here("figures"))
+gtsave(site_sumary_table, filename = "site_sumary_table.png", path = here("figures"))
 ```
 
 # Plots
